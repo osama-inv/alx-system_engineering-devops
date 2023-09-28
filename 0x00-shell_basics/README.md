@@ -1,1 +1,3 @@
-hi
+#!/bin/bash
+pws
+
