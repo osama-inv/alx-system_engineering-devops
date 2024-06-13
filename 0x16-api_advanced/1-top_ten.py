@@ -1,37 +1,46 @@
 #!/usr/bin/python3
-"""
-Script to print hot posts on a given Reddit subreddit.
-"""
-
+""" querry reddit api for subreddit info"""
 import requests
+import requests.auth
 
 
 def top_ten(subreddit):
-    """Print the titles of the 10 hottest posts on a given subreddit."""
-    # Construct the URL for the subreddit's hot posts in JSON format
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
+    """ querry reddit api"""
+    sub = subreddit
+    subreddit = "/r/{}/hot".format(sub)
+    temp = "HolbertonPass845"
 
-    # Define headers for the HTTP request, including User-Agent
-    headers = {
-        "User-Agent": "linux:0x16.api.advanced:v1.0.0 (by /u/bdov_)"
-    }
+    secret = "Z4Sa9bA6RRE44qDyhHQiTlW1gd0"
+    client_id = "hy4KvoK0W2iDvw"
+    usr_name = "jgadelugo"
 
-    # Define parameters for the request, limiting the number of posts to 10
-    params = {
-        "limit": 10
-    }
+    client_auth = requests.auth.HTTPBasicAuth(client_id, secret)
+    post_data = {"grant_type": "password",
+                 "username": usr_name,
+                 "password": temp}
 
-    # Send a GET request to the subreddit's hot posts page
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
+    headers = {"User-Agent": "ChangeMeClient/0.1 by {}".format(usr_name)}
+    response = requests.post("https://www.reddit.com/api/v1/access_token",
+                             auth=client_auth, data=post_data, headers=headers)
+    auth_json = response.json()
 
-    # Check if the response status code indicates a not-found error (404)
-    if response.status_code == 404:
+    token_type = auth_json['token_type']
+    access_token = auth_json['access_token']
+
+    headers = {"Authorization": "{} {}".format(token_type, access_token),
+               "User-Agent": "ChangeMeClient/0.1 by {}".format(usr_name)}
+
+    param = {"limit": 10}
+
+    query = "https://oauth.reddit.com{}".format(subreddit)
+    res = requests.get(query, headers=headers, params=param)
+
+    status = res.status_code
+
+    if (status != 200):
         print("None")
-        return
-
-    # Parse the JSON response and extract the 'data' section
-    results = response.json().get("data")
-
-    # Print the titles of the top 10 hottest posts
-    [print(c.get("data").get("title")) for c in results.get("children")]
+    else:
+        data = res.json()
+        posts = data["data"]['children']
+        for post in posts:
+            print(post['data']['title'])
